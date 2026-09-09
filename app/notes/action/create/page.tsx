@@ -22,9 +22,9 @@ export const metadata: Metadata = {
 
 export default function CreateNotePage() {
   return (
-    <main className={css.main}>
-      <div className={css.container}>
-        <h1 className={css.title}>Create note</h1>
+    <main className={css.main} style={{ margin: '0 auto' }}>
+      <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+        <h1 className={css.title} style={{ textAlign: 'center' }}>Create note</h1>
         <NoteForm />
       </div>
     </main>

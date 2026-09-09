@@ -1,7 +1,7 @@
 'use client';
 
 import { useNoteStore } from '@/lib/store/noteStore';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { createNote } from '@/lib/api';
 import css from './NoteForm.module.css';
@@ -11,21 +11,26 @@ export function NoteForm() {
   const queryClient = useQueryClient();
   const { draft, setDraft, clearDraft } = useNoteStore();
 
+  const mutation = useMutation({
+    mutationFn: createNote,
+    onSuccess: () => {
+      clearDraft();
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      router.push('/notes/filter/all');
+    },
+    onError: (error) => {
+      console.error('Failed to create note:', error);
+    },
+  });
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setDraft({ [name]: value });
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    try {
-      await createNote(draft);
-      clearDraft();
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-      router.push('/notes/filter/all');
-    } catch (error) {
-      console.error('Failed to create note:', error);
-    }
+    mutation.mutate(draft);
   };
 
   const handleCancel = () => {
@@ -72,12 +77,13 @@ export function NoteForm() {
           <option value="Work">Work</option>
           <option value="Personal">Personal</option>
           <option value="Meeting">Meeting</option>
+          <option value="Shopping">Shopping</option>
         </select>
       </div>
 
       <div className={css.actions}>
-        <button type="submit" className={css.submitBtn}>
-          Create note
+        <button type="submit" disabled={mutation.isPending} className={css.submitBtn}>
+          {mutation.isPending ? 'Creating...' : 'Create note'}
         </button>
         <button type="button" onClick={handleCancel} className={css.cancelBtn}>
           Cancel
